@@ -8,9 +8,11 @@ dependencies = [
     "keyboard>=0.13.5",
     "keyring>=25.6.0",
     "keyrings-alt>=5.0.2",
+    "orange3-textable>=3.2.1",
     "pillow>=11.1.0",
     "pyperclip>=1.9.0",
     "pystray>=0.19.5",
+    "sendgrid>=6.11.0",
     "trafilatura>=2.0.0",
     "twilio>=9.4.5",
 ]
