@@ -2,7 +2,6 @@ import threading
 import time
 import pyperclip
 import logging
-import sys
 from encryption import Encryption
 from key_manager import KeyManager
 from notification import NotificationWindow
@@ -23,57 +22,29 @@ class ClipboardMonitor:
         logging.info("ClipboardMonitor initialized")
 
     def _verify_clipboard_access(self):
-        """Verify that clipboard access is available on Windows"""
+        """Verify that clipboard access is available"""
         try:
             pyperclip.paste()
-            logging.info("Windows clipboard access verified")
+            logging.info("Clipboard access verified")
         except Exception as e:
-            logging.error(f"Windows clipboard access failed: {e}")
+            logging.error(f"Clipboard access failed: {e}")
             raise RuntimeError(
-                "Could not access Windows clipboard. Please ensure:\n"
+                "Could not access clipboard. Please ensure:\n"
                 "1. The application has necessary permissions\n"
                 "2. No other application is blocking clipboard access\n"
-                "3. Windows clipboard service is running"
+                "3. Clipboard service is running"
             )
-
-    def _safe_clipboard_operation(self, operation, *args):
-        """Safely perform clipboard operations with Windows-specific handling"""
-        max_retries = 3
-        retry_delay = 0.1  # Shorter delay for Windows
-
-        for attempt in range(max_retries):
-            try:
-                if operation == "copy":
-                    pyperclip.copy(args[0])
-                    return True
-                elif operation == "paste":
-                    return pyperclip.paste()
-            except Exception as e:
-                logging.error(f"Windows clipboard {operation} failed (attempt {attempt + 1}): {e}")
-                if attempt < max_retries - 1:
-                    time.sleep(retry_delay)
-                    continue
-                return None if operation == "paste" else False
-
-        return None if operation == "paste" else False
 
     def start_monitoring(self):
         """Start monitoring the clipboard for changes"""
-        logging.info("Starting Windows clipboard monitoring")
+        logging.info("Starting clipboard monitoring")
         consecutive_errors = 0
 
         while True:
             try:
-                current_content = self._safe_clipboard_operation("paste")
-                if current_content is None:
-                    consecutive_errors += 1
-                    if consecutive_errors > 5:
-                        logging.error("Multiple consecutive Windows clipboard errors, sleeping...")
-                        time.sleep(2)  # Shorter sleep for Windows
-                        consecutive_errors = 0
-                    continue
+                current_content = pyperclip.paste()
 
-                if current_content != self.previous_content:
+                if current_content != self.previous_content and current_content:
                     logging.info("Clipboard content changed")
                     self.handle_clipboard_change(current_content)
                     consecutive_errors = 0
@@ -81,10 +52,14 @@ class ClipboardMonitor:
                 if self.force_decrypt:
                     self.manual_decrypt()
 
-                time.sleep(0.1)  # Reduced delay for better Windows performance
+                time.sleep(0.1)  # Short delay for better performance
             except Exception as e:
-                logging.error(f"Error monitoring Windows clipboard: {e}")
+                logging.error(f"Error monitoring clipboard: {e}")
                 consecutive_errors += 1
+                if consecutive_errors > 5:
+                    logging.error("Multiple consecutive clipboard errors, sleeping...")
+                    time.sleep(2)
+                    consecutive_errors = 0
 
     def handle_clipboard_change(self, content):
         """Handle clipboard content changes with enhanced visual feedback"""
@@ -105,13 +80,13 @@ class ClipboardMonitor:
                     # Show decryption notification with the decrypted text
                     self.notification.show_notification("decrypt", decrypted)
                     # Keep the encrypted text in clipboard but show decrypted version
-                    self._safe_clipboard_operation("copy", content)
+                    pyperclip.copy(content)
             else:
                 logging.info("Detected plain text, encrypting")
                 encrypted = self.encryption.encrypt(content)
                 if encrypted:
                     logging.info("Successfully encrypted content")
-                    self._safe_clipboard_operation("copy", encrypted)
+                    pyperclip.copy(encrypted)
                     # Show encryption notification
                     self.notification.show_notification("encrypt", content)
                     # Clear decryption display since we're encrypting
@@ -139,7 +114,7 @@ class ClipboardMonitor:
 
     def clear_clipboard(self):
         """Clear the clipboard contents"""
-        self._safe_clipboard_operation("copy", '')
+        pyperclip.copy('')
         self.previous_content = ''
         logging.info("Cleared clipboard contents")
 
@@ -169,12 +144,12 @@ class ClipboardMonitor:
     def manual_decrypt(self):
         """Manual decryption"""
         try:
-            content = self._safe_clipboard_operation("paste")
+            content = pyperclip.paste()
             if content and self.encryption.is_encrypted(content):
                 logging.info("Manual decryption attempt")
                 decrypted = self.encryption.decrypt(content)
                 if decrypted:
                     logging.info("Manual decryption successful")
-                    self._safe_clipboard_operation("copy", decrypted)
+                    pyperclip.copy(decrypted)
         except Exception as e:
             logging.error(f"Error in manual decryption: {e}")
