@@ -24,7 +24,7 @@ class NotificationWindow:
             else:
                 logging.warning("Attempted to initialize root from non-main thread")
 
-    def show_notification(self, action_type):
+    def show_notification(self, action_type, text_content=None):
         """Show an animated notification for encryption/decryption actions"""
         try:
             # Initialize root window if needed
@@ -34,18 +34,18 @@ class NotificationWindow:
             if threading.current_thread() is not threading.main_thread():
                 logging.info("Scheduling notification from background thread")
                 if self.root:
-                    self.root.after(0, lambda: self._show_notification_internal(action_type))
+                    self.root.after(0, lambda: self._show_notification_internal(action_type, text_content))
                 return
 
-            self._show_notification_internal(action_type)
+            self._show_notification_internal(action_type, text_content)
         except Exception as e:
             logging.error(f"Error showing notification: {e}")
 
-    def _show_notification_internal(self, action_type):
+    def _show_notification_internal(self, action_type, text_content=None):
         """Internal method to handle notification creation and display"""
         try:
             # Create notification window
-            notification = self._create_notification(action_type)
+            notification = self._create_notification(action_type, text_content)
             if notification:
                 self.notifications.append(notification)
 
@@ -61,7 +61,7 @@ class NotificationWindow:
         except Exception as e:
             logging.error(f"Error in _show_notification_internal: {e}")
 
-    def _create_notification(self, action_type):
+    def _create_notification(self, action_type, text_content=None):
         """Create a notification window with enhanced visual styling"""
         try:
             window = tk.Toplevel() if self.root else tk.Tk()
@@ -69,9 +69,9 @@ class NotificationWindow:
             window.attributes('-topmost', True)  # Keep on top
             window.overrideredirect(True)  # Remove window decorations
 
-            # Set window properties
-            window_width = 320
-            window_height = 120
+            # Set window properties - make it wider for text content
+            window_width = 400
+            window_height = 160 if text_content else 120
             screen_width = window.winfo_screenwidth()
             screen_height = window.winfo_screenheight()
             x_position = screen_width - window_width - 20
@@ -104,6 +104,10 @@ class NotificationWindow:
                           font=("Segoe UI", 10),
                           background=bg_color,
                           foreground=fg_color)
+            style.configure("Content.TLabel",
+                          font=("Segoe UI", 9),
+                          background=bg_color,
+                          foreground=fg_color)
             style.configure("Notification.Horizontal.TProgressbar",
                           background=progress_color,
                           troughcolor=bg_color)
@@ -128,13 +132,25 @@ class NotificationWindow:
             message_label = ttk.Label(frame,
                                     text=message,
                                     style="Message.TLabel")
-            message_label.pack(pady=(0, 8))
+            message_label.pack(pady=(0, 4))
+
+            # Show the actual text content if provided
+            if text_content:
+                # Truncate long text
+                max_length = 50
+                displayed_text = text_content if len(text_content) <= max_length else text_content[:max_length] + "..."
+
+                content_label = ttk.Label(frame,
+                                        text=displayed_text,
+                                        style="Content.TLabel",
+                                        wraplength=360)  # Allow text wrapping
+                content_label.pack(pady=(0, 8))
 
             # Progress bar
             progress = ttk.Progressbar(frame,
                                      style="Notification.Horizontal.TProgressbar",
                                      mode='determinate',
-                                     length=280)
+                                     length=360)
             progress.pack(pady=(4, 0))
 
             window.update_idletasks()
@@ -162,8 +178,8 @@ class NotificationWindow:
     def _get_notification_message(self, action_type):
         """Get the appropriate message for the notification"""
         messages = {
-            "encrypt": "Text has been encrypted",
-            "decrypt": "Text has been decrypted",
+            "encrypt": "Original text copied and encrypted",
+            "decrypt": "Decrypted text:",
             "force_decrypt": "Force decrypt mode activated (10s)",
             "error": "An error occurred during operation",
             "startup": "Look for the blue lock icon in your system tray"

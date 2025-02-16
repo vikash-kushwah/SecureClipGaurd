@@ -4,7 +4,7 @@ import logging
 from PIL import Image, ImageDraw
 
 class MainWindow:
-    def __init__(self, clipboard_monitor):
+    def __init__(self, clipboard_monitor=None):
         self.root = tk.Tk()
         self.root.title("Secure Clipboard")
         self.clipboard_monitor = clipboard_monitor
@@ -12,12 +12,19 @@ class MainWindow:
         self.create_widgets()
         logging.info("Main window initialized")
         self.update_timer_id = None
+        # Don't start updates until clipboard monitor is set
+        if clipboard_monitor:
+            self._start_status_updates()
+
+    def set_clipboard_monitor(self, monitor):
+        """Set the clipboard monitor and start status updates"""
+        self.clipboard_monitor = monitor
         self._start_status_updates()
 
     def setup_window(self):
         # Set window size and position
         window_width = 400
-        window_height = 350  # Increased height for better visibility
+        window_height = 450  # Increased height for decryption display
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         x_position = (screen_width - window_width) // 2
@@ -34,6 +41,7 @@ class MainWindow:
         style.configure("Header.TLabel", font=('Segoe UI', 16, 'bold'))
         style.configure("Active.TLabel", foreground='green', font=('Segoe UI', 9, 'bold'))
         style.configure("Inactive.TLabel", foreground='gray', font=('Segoe UI', 9))
+        style.configure("Decrypted.TLabel", font=('Segoe UI', 10), foreground='#1565C0')
 
     def create_widgets(self):
         # Header with status indicator
@@ -78,6 +86,18 @@ class MainWindow:
             command=self.update_mode
         ).pack(anchor=tk.W, pady=5)
 
+        # Live decryption display
+        decrypt_frame = ttk.LabelFrame(self.root, text="Live Decryption", padding="20")
+        decrypt_frame.pack(fill=tk.X, padx=20, pady=10)
+
+        self.decrypt_label = ttk.Label(
+            decrypt_frame,
+            text="Decrypted text will appear here",
+            style="Decrypted.TLabel",
+            wraplength=320
+        )
+        self.decrypt_label.pack(anchor=tk.W, pady=5)
+
         # Status with more detailed information
         status_frame = ttk.LabelFrame(self.root, text="Current Status", padding="20")
         status_frame.pack(fill=tk.X, padx=20, pady=10)
@@ -114,10 +134,17 @@ class MainWindow:
             style="Mode.TButton"
         ).pack(side=tk.RIGHT, padx=5)
 
+    def update_decrypt_display(self, text):
+        """Update the live decryption display"""
+        if text:
+            self.decrypt_label.configure(text=text)
+        else:
+            self.decrypt_label.configure(text="Decrypted text will appear here")
+
     def _start_status_updates(self):
         """Start periodic status updates"""
         def update_status():
-            if self.clipboard_monitor.force_decrypt:
+            if self.clipboard_monitor and self.clipboard_monitor.force_decrypt:
                 self.status_dot.configure(style="Active.TLabel", text="●")
                 self.status_label.configure(text="🔓 Force Decrypt Mode Active")
                 self.mode_label.configure(text="Mode: Force Decrypt (10s)")
@@ -132,6 +159,9 @@ class MainWindow:
 
     def update_mode(self):
         """Update encryption/decryption mode"""
+        if not self.clipboard_monitor:
+            return
+
         mode = self.mode_var.get()
         if mode == "decrypt":
             self.clipboard_monitor.force_decrypt = True
@@ -144,9 +174,10 @@ class MainWindow:
 
     def generate_new_key(self):
         """Generate a new encryption key with visual feedback"""
-        self.clipboard_monitor.key_manager.generate_new_key()
-        self.status_label.configure(text="🔑 New encryption key generated")
-        self.root.after(3000, lambda: self.update_mode())  # Reset status after 3 seconds
+        if self.clipboard_monitor:
+            self.clipboard_monitor.key_manager.generate_new_key()
+            self.status_label.configure(text="🔑 New encryption key generated")
+            self.root.after(3000, lambda: self.update_mode())  # Reset status after 3 seconds
 
     def hide_window(self):
         """Hide the main window"""

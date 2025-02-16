@@ -17,8 +17,14 @@ class ClipboardMonitor:
         self.force_decrypt = False
         self.force_decrypt_timer = None
         self.notification = NotificationWindow()
+        self.main_window = None  # Initialize main_window attribute
         self._verify_clipboard_access()
         logging.info("ClipboardMonitor initialized")
+
+    def set_main_window(self, main_window):
+        """Set the main window reference"""
+        self.main_window = main_window
+        logging.info("Main window reference set in ClipboardMonitor")
 
     def _verify_clipboard_access(self):
         """Verify that clipboard access is available on Windows"""
@@ -95,22 +101,25 @@ class ClipboardMonitor:
         try:
             if self.encryption.is_encrypted(content):
                 logging.info("Detected encrypted content")
-                if self.force_decrypt:
-                    logging.info("Force decrypt mode active, attempting decryption")
-                    decrypted = self.encryption.decrypt(content)
-                    if decrypted:
-                        logging.info("Successfully decrypted content")
-                        self._safe_clipboard_operation("copy", decrypted)
-                        # Show decryption notification with animation
-                        self.notification.show_notification("decrypt")
+                decrypted = self.encryption.decrypt(content)
+                if decrypted:
+                    logging.info("Successfully decrypted content")
+                    # Update main window's decryption display
+                    self.main_window.update_decrypt_display(decrypted)
+                    # Show decryption notification with the decrypted text
+                    self.notification.show_notification("decrypt", decrypted)
+                    # Keep the encrypted text in clipboard but show decrypted version
+                    self._safe_clipboard_operation("copy", content)
             else:
                 logging.info("Detected plain text, encrypting")
                 encrypted = self.encryption.encrypt(content)
                 if encrypted:
                     logging.info("Successfully encrypted content")
                     self._safe_clipboard_operation("copy", encrypted)
-                    # Show encryption notification with animation
-                    self.notification.show_notification("encrypt")
+                    # Show encryption notification
+                    self.notification.show_notification("encrypt", content)
+                    # Clear decryption display since we're encrypting
+                    self.main_window.update_decrypt_display(None)
 
             self.start_clear_timer()
         except Exception as e:
@@ -146,6 +155,9 @@ class ClipboardMonitor:
             self.force_decrypt_timer.start()
             # Show mode change notification
             self.notification.show_notification("force_decrypt")
+        else:
+            # Clear decryption display when disabling force decrypt
+            self.main_window.update_decrypt_display(None)
         return self.force_decrypt
 
     def disable_force_decrypt(self):

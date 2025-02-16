@@ -11,13 +11,17 @@ def main():
     if not key_manager.get_encryption_key():
         key_manager.generate_new_key()
 
-    # Start clipboard monitor in a separate thread
+    # Initialize main window first (without clipboard monitor)
+    main_window = MainWindow()
+
+    # Initialize clipboard monitor
     clipboard_monitor = ClipboardMonitor()
+    clipboard_monitor.set_main_window(main_window)  # Set the main window using the new method
+    main_window.set_clipboard_monitor(clipboard_monitor)  # Set the monitor using the new method
+
+    # Start clipboard monitor in a separate thread
     monitor_thread = threading.Thread(target=clipboard_monitor.start_monitoring, daemon=True)
     monitor_thread.start()
-
-    # Initialize main window
-    main_window = MainWindow(clipboard_monitor)
 
     # Initialize and start system tray
     tray_icon = SystemTrayIcon(clipboard_monitor, main_window)
