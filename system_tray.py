@@ -13,9 +13,10 @@ class NotificationWindow:
             print("Secure Clipboard is running - Look for the blue lock icon in your system tray (bottom right corner)")
 
 class SystemTrayIcon:
-    def __init__(self, clipboard_monitor):
+    def __init__(self, clipboard_monitor, main_window):
         self.key_manager = KeyManager()
         self.clipboard_monitor = clipboard_monitor
+        self.main_window = main_window
         self.notification = NotificationWindow()
         self.create_icon()
         logging.info("System tray icon initialized")
@@ -56,9 +57,13 @@ class SystemTrayIcon:
         # Windows-friendly menu with clear instructions
         menu = (
             pystray.MenuItem(
-                "Toggle Encryption (Right-click)",
-                self.toggle_decrypt,
+                "Open Control Panel",
+                self.show_main_window,
                 default=True
+            ),
+            pystray.MenuItem(
+                "Toggle Decryption Mode",
+                self.toggle_decrypt
             ),
             pystray.MenuItem(
                 "Generate New Key",
@@ -73,10 +78,14 @@ class SystemTrayIcon:
         self.icon = pystray.Icon(
             "SecureClipboard",
             icon_image,
-            "Secure Clipboard (Right-click to toggle encryption)",
+            "Secure Clipboard (Click to open control panel)",
             menu
         )
         logging.info("System tray menu created with Windows-friendly options")
+
+    def show_main_window(self):
+        """Show the main control panel window"""
+        self.main_window.show_window()
 
     def run(self):
         """Run the system tray icon"""
