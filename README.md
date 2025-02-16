@@ -1,10 +1,16 @@
+# SecureClipGaurd - Secure Clipboard Encryption
+
+## 🚀 Installation
+
+1. **Install Required Dependencies**
+```bash
 pip install pillow pyperclip pystray cryptography keyrings.alt keyring
 ```
 
 3. Clone or download this repository:
 ```bash
-git clone https://github.com/yourusername/secure-clipboard.git
-cd secure-clipboard
+git clone https://github.com/vikash-kushwah/SecureClipGaurd.git
+cd SecureClipGaurd
 ```
 
 4. Run the application:
@@ -82,3 +88,24 @@ Access advanced features through the control panel:
 1. **Installation Problems**
    ```bash
    pip install --upgrade pillow pyperclip pystray cryptography keyrings.alt keyring
+
+2. **Clipboard Access Issues**
+
+- Ensure no other application is blocking clipboard access
+- Run the application as a regular user (not admin)
+- Verify clipboard service is running
+
+3. **Visual Issues**
+
+- Make sure system tray is enabled
+- Check if notifications are allowed
+
+## 🤝 Contributing
+Fork the Project
+Create your Feature Branch (git checkout -b feature/AmazingFeature)
+Commit your Changes (git commit -m 'Add some AmazingFeature')
+Push to the Branch (git push origin feature/AmazingFeature)
+Open a Pull Request
+
+## 📫 Contact
+Project Link: https://github.com/vikash-kushwah/SecureClipGaurd
