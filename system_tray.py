@@ -78,7 +78,7 @@ class SystemTrayIcon:
         self.icon = pystray.Icon(
             "SecureClipboard",
             icon_image,
-            "Secure Clipboard (Click to open control panel)",
+            "Secure Clipboard (Active - Auto Mode)",  # Updated default title
             menu
         )
         logging.info("System tray menu created with Windows-friendly options")
@@ -99,18 +99,18 @@ class SystemTrayIcon:
     def toggle_decrypt(self):
         """Toggle decrypt mode"""
         is_active = self.clipboard_monitor.toggle_force_decrypt()
-        status = "enabled" if is_active else "disabled"
-        self.icon.title = f"Secure Clipboard (Decryption: {status})"
+        status = "Force Decrypt" if is_active else "Auto"
+        self.icon.title = f"Secure Clipboard (Active - {status} Mode)"
         logging.info(f"Decryption mode {status}")
 
     def generate_new_key(self):
         """Generate a new encryption key"""
         try:
             self.key_manager.generate_new_key()
-            self.icon.title = "Secure Clipboard (New Key Generated)"
+            self.icon.title = "Secure Clipboard (Active - New Key Generated)"
             logging.info("Generated new encryption key")
         except Exception as e:
-            self.icon.title = "Secure Clipboard (Key Generation Failed)"
+            self.icon.title = "Secure Clipboard (Active - Key Generation Failed)"
             logging.error(f"Error generating new key: {e}")
 
     def quit_application(self):

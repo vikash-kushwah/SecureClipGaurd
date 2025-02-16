@@ -85,7 +85,7 @@ class ClipboardMonitor:
                 consecutive_errors += 1
 
     def handle_clipboard_change(self, content):
-        """Handle clipboard content changes"""
+        """Handle clipboard content changes with enhanced visual feedback"""
         if not content:
             return
 
@@ -101,6 +101,7 @@ class ClipboardMonitor:
                     if decrypted:
                         logging.info("Successfully decrypted content")
                         self._safe_clipboard_operation("copy", decrypted)
+                        # Show decryption notification with animation
                         self.notification.show_notification("decrypt")
             else:
                 logging.info("Detected plain text, encrypting")
@@ -108,11 +109,14 @@ class ClipboardMonitor:
                 if encrypted:
                     logging.info("Successfully encrypted content")
                     self._safe_clipboard_operation("copy", encrypted)
+                    # Show encryption notification with animation
                     self.notification.show_notification("encrypt")
 
             self.start_clear_timer()
         except Exception as e:
             logging.error(f"Error handling clipboard change: {e}")
+            # Show error notification
+            self.notification.show_notification("error")
 
     def start_clear_timer(self):
         """Start timer to clear clipboard after 30 seconds"""
@@ -130,7 +134,7 @@ class ClipboardMonitor:
         logging.info("Cleared clipboard contents")
 
     def toggle_force_decrypt(self):
-        """Toggle force decrypt mode"""
+        """Toggle force decrypt mode with visual feedback"""
         self.force_decrypt = not self.force_decrypt
         status = "enabled" if self.force_decrypt else "disabled"
         logging.info(f"Force decrypt mode {status}")
@@ -140,6 +144,8 @@ class ClipboardMonitor:
                 self.force_decrypt_timer.cancel()
             self.force_decrypt_timer = threading.Timer(10.0, self.disable_force_decrypt)
             self.force_decrypt_timer.start()
+            # Show mode change notification
+            self.notification.show_notification("force_decrypt")
         return self.force_decrypt
 
     def disable_force_decrypt(self):
