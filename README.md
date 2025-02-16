@@ -1,4 +1,4 @@
-pip install keyboard pillow pyperclip pystray cryptography keyrings.alt keyring
+pip install pillow pyperclip pystray cryptography keyrings.alt keyring
 ```
 
 2. Clone or download the repository:
@@ -17,12 +17,14 @@ python secure_clipboard.py
 1. After running the application, look for the blue lock icon in your system tray (bottom right corner)
 2. Copy any text to automatically encrypt it
 3. Copy encrypted text to automatically see the decrypted version
-4. Use Ctrl+Alt+E to quickly encrypt and paste selected text
 
-## ⌨️ Keyboard Shortcuts
+## 🔧 Additional Options
 
-- `Ctrl+Alt+E`: Quick encrypt and paste selected text
-- Right-click system tray icon for additional options
+Right-click the system tray icon for:
+- Toggle Force Decrypt Mode
+- Generate New Key
+- Open Control Panel
+- Exit Application
 
 ## 🔧 Troubleshooting
 
@@ -30,4 +32,4 @@ If you encounter any issues:
 
 1. Missing packages:
    ```bash
-   pip install --upgrade keyboard pillow pyperclip pystray cryptography keyrings.alt keyring
+   pip install --upgrade pillow pyperclip pystray cryptography keyrings.alt keyring

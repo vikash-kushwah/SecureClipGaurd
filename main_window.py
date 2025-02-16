@@ -119,12 +119,12 @@ class MainWindow:
 
         # Only show shortcuts frame on Windows
         if sys.platform == 'win32':
-            shortcut_frame = ttk.LabelFrame(self.root, text="Shortcuts", padding="20")
+            shortcut_frame = ttk.LabelFrame(self.root, text="Additional Options", padding="20")
             shortcut_frame.pack(fill=tk.X, padx=20, pady=10)
 
             self.shortcut_label = ttk.Label(
                 shortcut_frame,
-                text="⌨️ Quick Encrypt: Ctrl+Alt+E\nSelect text and use shortcut to encrypt and paste in-place",
+                text="Right-click the system tray icon for more options",
                 style="Status.TLabel",
                 wraplength=320
             )
