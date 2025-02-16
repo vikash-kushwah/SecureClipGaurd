@@ -78,7 +78,7 @@ class SystemTrayIcon:
         self.icon = pystray.Icon(
             "SecureClipboard",
             icon_image,
-            "Secure Clipboard (Active - Auto Mode)",  # Updated default title
+            "Secure Clipboard (Active - Auto Mode)\nQuick Encrypt: Ctrl+Alt+E",  # Updated tooltip
             menu
         )
         logging.info("System tray menu created with Windows-friendly options")

@@ -1,7 +1,9 @@
 import threading
 import time
 import pyperclip
+import keyboard
 import logging
+import sys
 from encryption import Encryption
 from key_manager import KeyManager
 from notification import NotificationWindow
@@ -17,9 +19,62 @@ class ClipboardMonitor:
         self.force_decrypt = False
         self.force_decrypt_timer = None
         self.notification = NotificationWindow()
-        self.main_window = None  # Initialize main_window attribute
+        self.main_window = None
         self._verify_clipboard_access()
+        if sys.platform == 'win32':  # Only setup shortcut on Windows
+            self._setup_shortcut()
         logging.info("ClipboardMonitor initialized")
+
+    def _setup_shortcut(self):
+        """Setup keyboard shortcut for instant encryption (Windows only)"""
+        try:
+            keyboard.add_hotkey('ctrl+alt+e', self.encrypt_and_paste)
+            logging.info("Encryption shortcut (Ctrl+Alt+E) registered on Windows")
+        except Exception as e:
+            logging.error(f"Failed to register Windows shortcut: {e}")
+
+    def encrypt_and_paste(self):
+        """Handle the encrypt-and-paste shortcut"""
+        try:
+            # Store current clipboard content
+            original_content = self._safe_clipboard_operation("paste")
+
+            # Simulate Ctrl+C to get selected text
+            keyboard.send('ctrl+c')
+            time.sleep(0.1)  # Small delay to ensure clipboard is updated
+
+            # Get the selected text
+            selected_text = self._safe_clipboard_operation("paste")
+
+            if selected_text and selected_text != original_content:
+                # Encrypt the selected text
+                encrypted = self.encryption.encrypt(selected_text)
+                if encrypted:
+                    # Copy encrypted text to clipboard
+                    self._safe_clipboard_operation("copy", encrypted)
+                    # Simulate Ctrl+V to paste
+                    keyboard.send('ctrl+v')
+                    # Show encryption notification
+                    self.notification.show_notification("encrypt", selected_text)
+                    logging.info("Text encrypted and pasted via shortcut")
+                else:
+                    logging.error("Failed to encrypt text")
+                    self.notification.show_notification("error")
+
+                # Restore original clipboard content after a small delay
+                def restore_clipboard():
+                    time.sleep(0.5)  # Wait for paste to complete
+                    if original_content:
+                        self._safe_clipboard_operation("copy", original_content)
+
+                # Start restoration in a separate thread
+                threading.Thread(target=restore_clipboard, daemon=True).start()
+            else:
+                logging.warning("No new text selected or clipboard unchanged")
+
+        except Exception as e:
+            logging.error(f"Error in encrypt-and-paste shortcut: {e}")
+            self.notification.show_notification("error")
 
     def set_main_window(self, main_window):
         """Set the main window reference"""

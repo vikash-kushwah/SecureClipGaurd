@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import logging
 from PIL import Image, ImageDraw
+import sys
 
 class MainWindow:
     def __init__(self, clipboard_monitor=None):
@@ -115,6 +116,19 @@ class MainWindow:
             style="Status.TLabel"
         )
         self.mode_label.pack(anchor=tk.W)
+
+        # Only show shortcuts frame on Windows
+        if sys.platform == 'win32':
+            shortcut_frame = ttk.LabelFrame(self.root, text="Shortcuts", padding="20")
+            shortcut_frame.pack(fill=tk.X, padx=20, pady=10)
+
+            self.shortcut_label = ttk.Label(
+                shortcut_frame,
+                text="⌨️ Quick Encrypt: Ctrl+Alt+E\nSelect text and use shortcut to encrypt and paste in-place",
+                style="Status.TLabel",
+                wraplength=320
+            )
+            self.shortcut_label.pack(anchor=tk.W, pady=5)
 
         # Actions with improved visual feedback
         action_frame = ttk.Frame(self.root, padding="20")
